@@ -5,9 +5,10 @@
 - 1. To verify our current understanding on the DCE  and compare it with the measured data.
 - 2. To quantify the non-linearity in the system.
 - 3. Approximate response of the SQUID to the second order.
-$$ I_C = 2 I_0 |\cos(\pi \frac{\Phi_a}{\Phi_0})|$$
 
-$$H = \frac{1}{2} \sum_{i=1}^\infty (\frac{P_i^2}{\Delta x C_0} +\frac{(\Phi_{i+1} - \Phi_i)^2}{\Delta x L_0}) + \frac{1}{2} \frac{P_1^2}{C_J} + \frac{1}{2}(\frac{2 \pi}{\Phi_0})^2 E_J(\Phi_{ext} \Phi_1^2) $$ (J. R. Johansson et al.: Phys. Rev. A 82, 052509 (2010))
+![Critical Current in a SQUID](https://github.com/benschneider/Sim_DCE/files/2008820/squirIc.pdf)
+![Hamiltonian of the System](https://github.com/benschneider/Sim_DCE/files/2008813/hamiltonian.pdf)
+(J. R. Johansson et al.: Phys. Rev. A 82, 052509 (2010))
 
 ## What this script does:
 	
@@ -25,13 +26,4 @@ $$H = \frac{1}{2} \sum_{i=1}^\infty (\frac{P_i^2}{\Delta x C_0} +\frac{(\Phi_{i+
 
 - Both responses are then fitted using the python script.
 
-```mermaid
-graph LR
-B[Phase] --> BC
-C[Magnitude] --> BC
-BC(Fitted SQUID Response) --> A
-A(Flux Pump) --> BC
-A --> D(Pump and losses)
-E(Pumps and losses) --  DCE parabolas --> F
-F{DCE-Photon response}
-```
+![Flow_Chart](https://github.com/benschneider/Sim_DCE/files/2008815/Flow-hart.pdf)
