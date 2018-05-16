@@ -7,6 +7,7 @@
 - 3. Approximate response of the SQUID to the second order.
 
 ![Critical Current in a SQUID](https://user-images.githubusercontent.com/4573907/40114209-50e3e604-590c-11e8-9805-73b1c692887b.png)
+
 ![Hamiltonian of the System](https://user-images.githubusercontent.com/4573907/40114212-544f9f36-590c-11e8-9134-163e7d6c2706.png)
 (J. R. Johansson et al.: Phys. Rev. A 82, 052509 (2010))
 
