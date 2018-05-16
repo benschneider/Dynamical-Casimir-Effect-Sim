@@ -6,7 +6,7 @@ from numpy import pi, cos, sin
 import PyGnuplot as gp
 from struct import pack, unpack
 
-plt.ion()
+# plt.ion()
 
 
 def savemtx(filename, data, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
@@ -131,12 +131,12 @@ def get_Negativity(n12, nth=0.0):
     N = get_LogNegNum(M_test)
     return N
 
-fileName_ang = '1157_S11_Avg_phase.linecut'
-fileName_mag = '1157_S11_Avg_mag.linecut'
-output_file1 = 'sim_all_parabolas_2.mtx'
-output_file2 = 'sim_pure_parabola_2.mtx'
-output_file3 = 'negativity_fit_2.mtx'
-output_file4 = 'TMS_NONTMS_ratio.mtx'
+fileName_ang = 'SQUID_phase.dat'
+fileName_mag = 'SQUID_magnitude.dat'
+output_file1 = 'sim_all_parabolas.mtx'
+output_file2 = 'sim_pure_parabola.mtx'
+output_file3 = 'negativity_fit.mtx'
+output_file4 = 'NL_ratio.mtx'
 
 data = load_data(fileName_ang)
 data_mag = load_data(fileName_mag)
@@ -164,22 +164,21 @@ popt2, pcov2 = curve_fit(fitFunc_mag, flux, data_mag[2], p0=iguess2, maxfev=5000
 Ic, Cap, offset, slope = popt
 print(popt2)
 print(pcov2)
-resolution = 2**11
+resolution = 2**10
 pumpfreq = 8.9e9
 omega0 = 2.0 * np.pi * pumpfreq
 timeaxis = np.linspace(0.0, 5.0e-9, resolution)
 freqaxis = np.fft.rfftfreq(timeaxis.shape[-1], (timeaxis[1] - timeaxis[0]))
-#  gap_freq = 88e9  # kept the FFT nyquist limit below this
+# gap_freq = 88e9  # kept the FFT nyquist limit below this
 pump_idx = np.argmin(abs(freqaxis - pumpfreq))
 scale = 0.01
-fluxpoints = 561
-powerpoints = 101
+fluxpoints = 141
+powerpoints = 201
 dc_offsets = np.linspace(-0.65, 0.75, fluxpoints)
-amplitudes = np.linspace(0.0, 0.1, powerpoints)
+amplitudes = np.linspace(0.0, 0.05, powerpoints)
 parabolas = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
 parabolas2 = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
 negativity = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
-# TMS_ratio = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
 
 for kk, dc_offset in enumerate(dc_offsets):
     print(kk)
@@ -201,8 +200,8 @@ for kk, dc_offset in enumerate(dc_offsets):
 header = ('Units,ufo,Frequency,' + str(freqaxis[0]) + ',' + str(freqaxis[-1]) +
           ',Pump,' + str(amplitudes[0]) + ',' + str(amplitudes[-1]) +
           ',FluxPos,' + str(dc_offsets[0]) + ','+str(dc_offsets[-1])+'')
-# savemtx(output_file1, parabolas, header)
-# savemtx(output_file2, parabolas2, header)
+savemtx(output_file1, parabolas, header)
+savemtx(output_file2, parabolas2, header)
 
 added_photons = parabolas - parabolas2
 # shape = parabolas2.shape
