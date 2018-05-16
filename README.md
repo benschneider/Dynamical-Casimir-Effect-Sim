@@ -10,12 +10,13 @@
 (J. R. Johansson et al.: Phys. Rev. A 82, 052509 (2010))
 
 ## How:
+
+![Flow_Chart](https://user-images.githubusercontent.com/4573907/40114197-4aeff86e-590c-11e8-917f-b8e18ca9b6f4.png)
+
 - [phase_res.py](https://github.com/benschneider/Sim_DCE/blob/master/phase_res.py), runs the simulation.
 -  The Phase and Loss responses where obtained from measurement (presented in the paper in Fig.2c). The corresponding data files included are: **SQUID_phase.dat** and **SQUID_magnitude.dat**
 
 - Both responses are then fitted using the python script.
-
-![Flow_Chart](https://user-images.githubusercontent.com/4573907/40114197-4aeff86e-590c-11e8-917f-b8e18ca9b6f4.png)
 
 ## What this script does:
 
