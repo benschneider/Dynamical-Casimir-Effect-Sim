@@ -1,13 +1,8 @@
-#! /Library/Frameworks/Python.framework/Versions/3.6/bin/python3 -i
 from scipy.optimize import curve_fit, minimize
 import numpy as np
 from numpy import pi, cos, sin
-# import matplotlib.pyplot as plt
 import PyGnuplot as gp
 from struct import pack, unpack
-
-# plt.ion()
-
 
 def savemtx(filename, data, header='Units,ufo,d1,0,1,d2,0,1,d3,0,1'):
     with open(filename, 'wb') as f:
@@ -78,22 +73,34 @@ def parabola(a, f, x):
         z[z < 0] = 0
     return z
 
+def get_first_parabola(freqaxis, fft_drive, scale=0.01, fcent=8.9e9):
+    # takes only values around the first pump
+    parabola_full = np.zeros_like(freqaxis)
+    for i, amp in enumerate(fft_drive):
+        freq = freqaxis[i]
+        if (amp > 0.02) and (freq < fcent+3e9) and (freq > fcent-3e9):
+            #print(freq)
+            parabola_full += parabola(amp * scale, freq, freqaxis)
+    return parabola_full
 
 def get_full_parabola(freqaxis, fft_drive, scale=0.01):
     parabola_full = np.zeros_like(freqaxis)
     for i, amp in enumerate(fft_drive):
         freq = freqaxis[i]
-        parabola_full += parabola(amp * scale, freq, freqaxis)
+        if (amp > 0.02) and (freq > 1e9):
+            #print(freq)
+            parabola_full += parabola(amp * scale, freq, freqaxis)
     return parabola_full
 
 
 def get_drive(amplitude, dc_offset, omega0, timeaxis):
+    # 0: Input amplitude v.s. time
+    # 1: Corresponding magnitude v.s. time
+    # 2: Corresponding phase v.s. time
     drive = np.zeros([4, resolution])
     for i, jj in enumerate(timeaxis):
-        signal = amplitude * np.sin(jj * omega0) + dc_offset
+        signal = amplitude * np.cos(jj * omega0) + dc_offset
         drive[0, i] = signal
-        # drive[1, i] = return_2p_value(flux, data_mag[2], signal)
-        # drive[3, i] = return_2p_value(flux, data[2], signal)
         drive[1, i] = fitFunc_mag(signal, popt2[0], popt2[1], popt2[2], popt2[3], popt2[4])
         drive[3, i] = fitFunc_ang(signal, Ic, Cap, offset, slope)
     return drive
@@ -101,42 +108,15 @@ def get_drive(amplitude, dc_offset, omega0, timeaxis):
 
 def get_fft_responses(drive):
     loss = np.mean(drive[1])
-    m0 = np.min(drive[0]) + (np.max(drive[0]) - np.min(drive[0])) / 2.0
+    # m0 = np.min(drive[0]) + (np.max(drive[0]) - np.min(drive[0])) / 2.0
     m3 = np.min(drive[3]) + (np.max(drive[3]) - np.min(drive[3])) / 2.0
-    fft_signal = np.abs(np.fft.rfft(drive[0] - m0, norm="ortho"))
+    # fft_signal = np.abs(np.fft.rfft(drive[0] - m0, norm="ortho"))
     fft_mirror = np.abs(np.fft.rfft(drive[3] - m3, norm="ortho")) * loss
-    # fft_loss = np.abs(np.fft.rfft(drive[1], norm="ortho"))
-    return fft_signal, fft_mirror
+    return fft_mirror
 
-
-def get_LogNegNum(CovM_in):
-    CovM = CovM_in * 2
-    V = np.linalg.det(CovM)
-    A = np.linalg.det(CovM[:2, :2])
-    B = np.linalg.det(CovM[2:, 2:])
-    C = np.linalg.det(CovM[:2, 2:])
-    sigma = A + B - 2.0 * C
-    vn = np.sqrt(sigma / 2.0 - np.sqrt(sigma * sigma - 4.0 * V) / 2.0)
-    if C == 0:
-        return 0.0
-    else:
-        return -np.log(2.0 * vn) if (np.log(2.0 * vn)) < 0.0 else 0.0
-
-
-def get_Negativity(n12, nth=0.0):
-    M_test = np.array([[(0.25+(n12+nth)/2.0), 0, np.sqrt(n12)/2.0, 0],
-                       [0, (0.25 + (n12+nth)/2.0), 0, -np.sqrt(n12)/2.0],
-                       [np.sqrt(n12)/2.0, 0, (0.25+(n12+nth)/2.0), 0],
-                       [0, -np.sqrt(n12)/2.0, 0, (0.25+(n12+nth) / 2.0)]])
-    N = get_LogNegNum(M_test)
-    return N
 
 fileName_ang = 'SQUID_phase.dat'
 fileName_mag = 'SQUID_magnitude.dat'
-output_file1 = 'sim_all_parabolas.mtx'
-output_file2 = 'sim_pure_parabola.mtx'
-output_file3 = 'negativity_fit.mtx'
-output_file4 = 'NL_ratio.mtx'
 
 data = load_data(fileName_ang)
 data_mag = load_data(fileName_mag)
@@ -152,84 +132,83 @@ flux = np.linspace(-0.75, 0.7011, 701)  # * flux0
 offset = -4.5
 slope = 0.1
 offset2 = 0.0
-scale2 = 1.0
+scale2 = 1.0  # for the fitting
 iguess = [Ic, Cap, offset, slope]
 iguess2 = [Ic, Cap, R, offset2, scale2]
 popt, pcov = curve_fit(fitFunc_ang, flux, data[2], p0=iguess)
 data_mag[2] = data_mag[2] / np.max(data_mag[2])
 popt2, pcov2 = curve_fit(fitFunc_mag, flux, data_mag[2], p0=iguess2, maxfev=500000, xtol=1e-36)
-# Only use the fit to obtain intermediate and lower noise data
-# print(popt)
-# print(pcov)
 Ic, Cap, offset, slope = popt
 print(popt2)
 print(pcov2)
-resolution = 2**10
+resolution = 2**14
 pumpfreq = 8.9e9
 omega0 = 2.0 * np.pi * pumpfreq
 timeaxis = np.linspace(0.0, 5.0e-9, resolution)
 freqaxis = np.fft.rfftfreq(timeaxis.shape[-1], (timeaxis[1] - timeaxis[0]))
-# gap_freq = 88e9  # kept the FFT nyquist limit below this
+# gap_freq = 88e9  # kept FFT nyquist limit below this (limit the FFT resolution)
 pump_idx = np.argmin(abs(freqaxis - pumpfreq))
 scale = 0.01
-fluxpoints = 141
-powerpoints = 201
-dc_offsets = np.linspace(-0.65, 0.75, fluxpoints)
-amplitudes = np.linspace(0.0, 0.05, powerpoints)
+fluxpoints = 1
+powerpoints = 101
+# dc_offsets = np.linspace(-0.65, 0.75, fluxpoints)
+dc_offsets = np.linspace(-0.41, -0.41, fluxpoints)
+amplitudes = np.linspace(0.001, 0.051, powerpoints)
 parabolas = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
-parabolas2 = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
-negativity = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
+parabolas_1 = np.zeros([fluxpoints, powerpoints, len(freqaxis)]) # only with pump freq
+parabolas_2 = np.zeros([fluxpoints, powerpoints, len(freqaxis)]) # only at first higher harmonic
+parabolas_3 = np.zeros([fluxpoints, powerpoints, len(freqaxis)]) # only at second ..
+effective_drive = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
+
+
 
 for kk, dc_offset in enumerate(dc_offsets):
     print(kk)
     for jj, amplitude in enumerate(amplitudes):
         drive = get_drive(amplitude, dc_offset, omega0, timeaxis)
-        fft_signal, fft_mirror = get_fft_responses(drive)
+        fft_mirror = get_fft_responses(drive)
         amp_d = fft_mirror[pump_idx]  # FFT amp component at drive
         # Flux parabola with all Frequencies
         parabolas[kk, jj] = get_full_parabola(freqaxis, fft_mirror, scale)
+        # parabolas[kk, jj] = get_re_parabola(freqaxis, fft_mirror, scale)
         # Flux parabola only at pump
-        parabolas2[kk, jj] = parabola(amp_d * scale, pumpfreq, freqaxis)
-        # parabolas[2, jj] = (parabolas[1, jj] + 1e-199) / (parabolas[0, jj] + 1e-90)
-        # parabolas[3, jj] = parabolas[1, jj] - parabolas[0, jj]
-        added_photons = parabolas[kk, jj] - parabolas2[kk, jj]
-        for ii, ph in enumerate(parabolas2[kk, jj]):
-            negativity[kk, jj, ii] = get_Negativity(ph, nth=added_photons[ii])
-            # TMS_ratio[kk, jj, ii] = parabolas2[kk, jj]/parabolas[kk, jj]
+        parabolas_1[kk, jj] =  get_first_parabola(freqaxis, fft_mirror, scale, fcent=8.9e9)
+        parabolas_2[kk, jj] =  get_first_parabola(freqaxis, fft_mirror, scale, fcent=8.9e9*2)
+        parabolas_3[kk, jj] =  get_first_parabola(freqaxis, fft_mirror, scale, fcent=8.9e9*3)
+        # parabolas2[kk, jj] = parabola(amp_d * scale, pumpfreq, freqaxis)
+        effective_drive[kk, jj]= fft_mirror
 
 header = ('Units,ufo,Frequency,' + str(freqaxis[0]) + ',' + str(freqaxis[-1]) +
           ',Pump,' + str(amplitudes[0]) + ',' + str(amplitudes[-1]) +
           ',FluxPos,' + str(dc_offsets[0]) + ','+str(dc_offsets[-1])+'')
+output_file1 = 'output/mtx/sim_all_parabolas.mtx'
+output_file2 = 'output/mtx/effective drive.mtx'
+output_file3 = 'output/mtx/ratio_1.mtx'
+output_file4 = 'output/mtx/ratio_2.mtx'
+output_file5 = 'output/mtx/ratio_3.mtx'
 savemtx(output_file1, parabolas, header)
-savemtx(output_file2, parabolas2, header)
-
-added_photons = parabolas - parabolas2
-# shape = parabolas2.shape
-# for kk in range(parabolas2.shape[0]):
-#     print(kk)
-#     for jj in range(parabolas2.shape[1]):
-#         for ii, ph in enumerate(parabolas2[kk, jj]):
-#             negativity[kk, jj, ii] = get_Negativity(ph, nth=added_photons[kk, jj, ii])
-
-# savemtx(output_file3, negativity, header)
-TMS_ratio = parabolas2 / parabolas
-savemtx(output_file4, TMS_ratio, header)
+savemtx(output_file2, effective_drive, header)
+savemtx(output_file3, (parabolas_1)/(parabolas+1e-90), header)
+savemtx(output_file4, (parabolas_2)/(parabolas+1e-90), header)
+savemtx(output_file5, (parabolas_3)/(parabolas+1e-90), header)
 
 m0 = np.min(drive[0]) + (np.max(drive[0]) - np.min(drive[0])) / 2.0
 m3 = np.min(drive[3]) + (np.max(drive[3]) - np.min(drive[3])) / 2.0
-plt.figure(1)
-plt.plot(flux, data_mag[2])
-plt.plot(flux, fitFunc_mag(flux, popt2[0], popt2[1], popt2[2], popt2[3], popt2[4]))
-plt.figure(2)
-plt.plot(flux, data[2])
-plt.plot(flux, fitFunc_ang(flux, popt[0], popt[1], popt[2], popt[3]))
-plt.figure(4)
-plt.plot(timeaxis, drive[0] - m0)
-plt.figure(5)
-plt.plot(timeaxis, drive[3] - m3)
-plt.figure(6)
-plt.plot(freqaxis, fft_signal)
-plt.figure(7)
-plt.plot(freqaxis, fft_mirror)
-plt.figure(8)
-plt.plot(freqaxis, parabolas[0, jj])
+gp.figure(1)
+gp.s([flux, data_mag[2], fitFunc_mag(flux, popt2[0], popt2[1], popt2[2], popt2[3], popt2[4])], 'output/magnitude_fit.tmp')
+gp.c('plot "output/magnitude_fit.tmp" u 1:2 w l t "Magnitude data"')
+gp.c('replot "output/magnitude_fit.tmp" u 1:3 w l t "fit"')
+gp.c('replot "output/magnitude_fit.tmp" u 1:(($2-$3)**2) w l t "difference^2"')
+gp.figure(2)
+gp.s([flux, data[2], fitFunc_ang(flux, popt[0], popt[1], popt[2], popt[3])], 'output/phase_fit.tmp')
+gp.c('plot "output/phase_fit.tmp" u 1:2 w l t "Phase data"')
+gp.c('replot "output/phase_fit.tmp" u 1:3 w l t "fit"')
+gp.c('replot "output/phase_fit.tmp" u 1:(($2-$3)**2) w l t "difference^2"')
+gp.figure(4)
+gp.s([timeaxis, drive[0]-m0, drive[3]-m3], 'output/drives.tmp')
+gp.c('plot "output/drives.tmp" u 1:2 w l')
+gp.c('replot "output/drives.tmp" u 1:3 w l')
+gp.figure(7)
+gp.plot([freqaxis, fft_mirror], 'output/effective signal.tmp')
+gp.figure(8)
+gp.plot([freqaxis, parabolas[0, jj]], 'output/parabolas.tmp')
