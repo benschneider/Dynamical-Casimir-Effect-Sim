@@ -73,22 +73,21 @@ def parabola(a, f, x):
         z[z < 0] = 0
     return z
 
-def get_first_parabola(freqaxis, fft_drive, scale=0.01, fcent=8.9e9):
+def get_first_parabola(freqaxis, fft_drive, scale=0.01, fcent=8.9e9, cutoff=0):
     # takes only values around the first pump
     parabola_full = np.zeros_like(freqaxis)
     for i, amp in enumerate(fft_drive):
         freq = freqaxis[i]
-        if (amp > 0.02) and (freq < fcent+3e9) and (freq > fcent-3e9):
-            #print(freq)
+        if (amp > cutoff) and (freq < fcent+1e9) and (freq > fcent-1e9):
+            # taking a witdh around fcent to minimize fft artefacts
             parabola_full += parabola(amp * scale, freq, freqaxis)
     return parabola_full
 
-def get_full_parabola(freqaxis, fft_drive, scale=0.01):
+def get_full_parabola(freqaxis, fft_drive, scale=0.01, cutoff=0):
     parabola_full = np.zeros_like(freqaxis)
     for i, amp in enumerate(fft_drive):
         freq = freqaxis[i]
-        if (amp > 0.02) and (freq > 1e9):
-            #print(freq)
+        if (amp > cutoff) and (freq > 1e9):
             parabola_full += parabola(amp * scale, freq, freqaxis)
     return parabola_full
 
@@ -141,10 +140,10 @@ popt2, pcov2 = curve_fit(fitFunc_mag, flux, data_mag[2], p0=iguess2, maxfev=5000
 Ic, Cap, offset, slope = popt
 print(popt2)
 print(pcov2)
-resolution = 2**14
+resolution = 2**16
 pumpfreq = 8.9e9
 omega0 = 2.0 * np.pi * pumpfreq
-timeaxis = np.linspace(0.0, 5.0e-9, resolution)
+timeaxis = np.linspace(0.0, 200e-9, resolution)
 freqaxis = np.fft.rfftfreq(timeaxis.shape[-1], (timeaxis[1] - timeaxis[0]))
 # gap_freq = 88e9  # kept FFT nyquist limit below this (limit the FFT resolution)
 pump_idx = np.argmin(abs(freqaxis - pumpfreq))
@@ -152,7 +151,7 @@ scale = 0.01
 fluxpoints = 1
 powerpoints = 101
 # dc_offsets = np.linspace(-0.65, 0.75, fluxpoints)
-dc_offsets = np.linspace(-0.41, -0.41, fluxpoints)
+dc_offsets = np.linspace(-0.45, -0.45, fluxpoints)
 amplitudes = np.linspace(0.001, 0.051, powerpoints)
 parabolas = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
 parabolas_1 = np.zeros([fluxpoints, powerpoints, len(freqaxis)]) # only with pump freq
