@@ -3,3 +3,4 @@
 *.tmp
 *.mtx
 /output
+.ipynb_checkpoints
