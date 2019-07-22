@@ -23,7 +23,7 @@ Now these frequency components enter the following model:
     part2 = np.sqrt(w*(wd-w))/(wp*Z0)  # DCE Parabola
     part3 = 1-(w**2)/(wp**2)+1j*Ldc*w/Z0  # SQUID reflection eqn r(w)(negative w)
     part4 = 1-(wd-w)**2/(wp**2)-1j*Ldc*(wd-w)/Z0  # SQUID reflection eqn r(w)(positive w)
-    beta = part1*part2/(part3*part4)  # beta is the photon rate
+    beta = part1*part2/(part3*part4)  # beta^2 is the photon rate
 ```
  
 - 7. Adds calculated losses due to frequencies above the superconducting gap frequency and the loss response values from the SQUID's magnitude response.
