@@ -7,7 +7,6 @@ import PyGnuplot as gp
 import fit_mag_phase as fit_data
 import make_hoa as hoa
 from loadsavemtx import savemtx, loadmtx
-# import numexpr as ne
 '''
 a
 fit_mag_phase.py
@@ -43,9 +42,6 @@ def get_beta(fluxac, w, wd=8.9e9, wp=40e9, fluxdc=0.475, Ic=3.4e-6, F0=np.pi, df
     Ldc = LJDC(fluxdc, Ic)  # SQUID inductance
     Z0 = 50
     part1 = F0*2j*pi*fluxac # fluxpump strength
-    # part2 = Ldc/Z0*np.sqrt(w*(wd-w))*np.tan(1.0*pi*fluxdc)  # relative change in inductance
-    # (lin-approx) #prev 2pi # tan not needed because any-longer since effective phase change is
-    # used
     part2 = np.sqrt(w*(wd-w))/(wd*Z0)
     part3 = 1-(w**2)/(wp**2)+1j*Ldc*w/Z0  # SQUID reflection eqn r(w)(negative w)
     part4 = 1-(wd-w)**2/(wp**2)-1j*Ldc*(wd-w)/Z0  # SQUID reflection eqn r(w)(positive w)
@@ -92,10 +88,6 @@ w = 4.8e9  # detector frequency
 ws = np.linspace(0.01e9, 15.01e9, 151)
 pfreq = [14.5e9] # for single plasmafrequency map
 pfreqs = np.linspace(1, 31, 121)*1e9  # plasmafrequencies
-# dc_flux = np.linspace(-0.42, -0.60, 181)
-# output_file1 = 'output/small_map/hoa.mtx'
-# output_file2 = 'output/small_map/dce_3_p.mtx'
-# output_file3 = 'output/small_map/dce_3_w.mtx'
 output_file1 = 'output/mtx/hoa_matrix_wide_20.mtx'
 output_file2 = 'output/mtx/dce_p_20.mtx'
 output_file3 = 'output/mtx/dce_w_20.mtx'
