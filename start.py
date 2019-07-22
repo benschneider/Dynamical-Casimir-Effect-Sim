@@ -35,13 +35,12 @@ def LJDC(fluxdc, Ic=3.4e-6):
     Ej_dc = Ic*flux0/(2*np.pi)
     return (flux0/(2*pi))**2 *1/(Ej_dc*np.abs(cos(pi*fluxdc))) # normalized fluxdc
 
-def get_beta(fluxac, w, wd=8.9e9, wp=40e9, fluxdc=0.475, Ic=3.4e-6, F0=np.pi, dfdc=0):  #, Ic=3.4e-6):
-    # F0 is the conversion factor from hoa phase to fluxac
-    # fluxac and fluxdc are normalized by flux0
+def get_beta(D, w, wd=8.9e9, wp=40e9, fluxdc=0.475, Ic=3.4e-6, F0=np.pi, dfdc=0):  #, Ic=3.4e-6):
+    # F0 is the conversion factor from hoa phase to an effective F0*D=fluxac
     flux0 = cons.h/(2*cons.e)
     Ldc = LJDC(fluxdc, Ic)  # SQUID inductance
     Z0 = 50
-    part1 = F0*2j*pi*fluxac # fluxpump strength
+    part1 = F0*D*2j*pi*D # fluxpump strength
     part2 = np.sqrt(w*(wd-w))/(wd*Z0)
     part3 = 1-(w**2)/(wp**2)+1j*Ldc*w/Z0  # SQUID reflection eqn r(w)(negative w)
     part4 = 1-(wd-w)**2/(wp**2)-1j*Ldc*(wd-w)/Z0  # SQUID reflection eqn r(w)(positive w)
