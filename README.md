@@ -16,13 +16,16 @@
 - 3. Obtains phase response values corresponding to that Flux signal from (1)
 - 4. (Similarly Obtains loss response values from the magnitude response.)
 - 5. Calculates Frequency components of this phase response.
-- changed (6. Multiplies these frequency components with a parabola expected by DCE.) 
-- 6.
+- 6 changed (Multiplies these frequency components with a parabola expected by DCE.) 
+Now these frequency components enter the following model:
+```python
     part1 = F0*D*2j*pi #  F0*D is the output of these frequency components resulting in effective phase shifts
     part2 = np.sqrt(w*(wd-w))/(wp*Z0)  # DCE Parabola
     part3 = 1-(w**2)/(wp**2)+1j*Ldc*w/Z0  # SQUID reflection eqn r(w)(negative w)
     part4 = 1-(wd-w)**2/(wp**2)-1j*Ldc*(wd-w)/Z0  # SQUID reflection eqn r(w)(positive w)
-    beta = part1*part2/(part3*part4)
+    beta = part1*part2/(part3*part4)  # beta is the photon rate
+```
+ 
 - 7. Adds calculated losses due to frequencies above the superconducting gap frequency and the loss response values from the SQUID's magnitude response.
 
 ![Flow_Chart](https://user-images.githubusercontent.com/4573907/40114197-4aeff86e-590c-11e8-917f-b8e18ca9b6f4.png)
