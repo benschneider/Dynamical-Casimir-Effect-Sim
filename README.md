@@ -20,7 +20,7 @@
 Now these frequency components enter the following model:
 ```python
     part1 = F0*D*2j*pi #  F0*D is the output of these frequency components resulting in effective phase shifts
-    part2 = np.sqrt(w*(wd-w))/(wp*Z0)  # DCE Parabola
+    part2 = np.sqrt(w*(wd-w))*Ldc/Z0 # changed 2019-09-20 (wp*Z0)  # DCE Parabola
     part3 = 1-(w**2)/(wp**2)+1j*Ldc*w/Z0  # SQUID reflection eqn r(w)(negative w)
     part4 = 1-(wd-w)**2/(wp**2)-1j*Ldc*(wd-w)/Z0  # SQUID reflection eqn r(w)(positive w)
     beta = part1*part2/(part3*part4)  # beta^2 is the photon rate
@@ -32,6 +32,7 @@ Now these frequency components enter the following model:
 
 ## How:
 
+- Create the folder output/mtx
 - [start.py](https://github.com/benschneider/Sim_DCE/blob/master/start.py), runs the simulation.
 -  The Phase and Loss responses where obtained from measurement (presented in the paper in Fig.2c). The corresponding data files included are: **SQUID_phase.dat** and **SQUID_magnitude.dat**
 - Both responses are then fitted using the python script.
