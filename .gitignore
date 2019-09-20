@@ -1,6 +1,7 @@
 
 *.swp
 *.tmp
-*.mtx
-/output
+/pre_code
+/reference
 .ipynb_checkpoints
+/__pycache__

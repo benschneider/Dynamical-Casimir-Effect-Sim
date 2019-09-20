@@ -1,4 +1,5 @@
 from scipy.optimize import curve_fit, minimize
+from scipy import constants as cons
 import numpy as np
 from numpy import pi, cos, sin
 import PyGnuplot as gp
@@ -42,7 +43,7 @@ def return_2p_value(xaxis, ydata, xvalin):
 
 
 def get_s11(flux, Ic, Cap, R=1e99):
-    flux0 = 2.07e-15
+    # flux0 = 2.07e-15
     f0 = 4.1e9
     z0 = 50
     L = flux0 / (Ic * 2.0 * pi * np.abs(np.cos(pi * flux)) + 1e-90)
@@ -72,6 +73,13 @@ def parabola(a, f, x):
         z = (-a / b**2 * (x - b)**2 + a)
         z[z < 0] = 0
     return z
+
+def new_photon_response():
+    return 0
+
+def LJDC(phidc, Ic):
+    Ej = Ic*flux0/(2*np.pi)
+    return (flux0/(2*np.pi))**2 *1/(Ej*cos(2*np.pi*phidc/flux0))
 
 def get_first_parabola(freqaxis, fft_drive, scale=0.01, fcent=8.9e9, cutoff=0):
     # takes only values around the first pump
@@ -126,7 +134,7 @@ data[1] = ((data[0] - x0) / (x1 - x0)) - 0.5  # corrected xaxis
 R = 300.0
 Ic = 2.4e-6
 Cap = 3e-13
-flux0 = 2.07e-15    # Tm^2; Flux quanta: flux0 =  h / (2*charging energy)
+flux0 = cons.h/(cons.e*2)  #2.07e-15 Tm^2; Flux quanta: flux0=h/(2*e)
 flux = np.linspace(-0.75, 0.7011, 701)  # * flux0
 offset = -4.5
 slope = 0.1
@@ -140,7 +148,7 @@ popt2, pcov2 = curve_fit(fitFunc_mag, flux, data_mag[2], p0=iguess2, maxfev=5000
 Ic, Cap, offset, slope = popt
 print(popt2)
 print(pcov2)
-resolution = 2**16
+resolution = 2**14
 pumpfreq = 8.9e9
 omega0 = 2.0 * np.pi * pumpfreq
 timeaxis = np.linspace(0.0, 200e-9, resolution)
@@ -148,10 +156,10 @@ freqaxis = np.fft.rfftfreq(timeaxis.shape[-1], (timeaxis[1] - timeaxis[0]))
 # gap_freq = 88e9  # kept FFT nyquist limit below this (limit the FFT resolution)
 pump_idx = np.argmin(abs(freqaxis - pumpfreq))
 scale = 0.01
-fluxpoints = 1
+fluxpoints = 101
 powerpoints = 101
 # dc_offsets = np.linspace(-0.65, 0.75, fluxpoints)
-dc_offsets = np.linspace(-0.45, -0.45, fluxpoints)
+dc_offsets = np.linspace(-0.5, -0.3, fluxpoints)
 amplitudes = np.linspace(0.001, 0.051, powerpoints)
 parabolas = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
 parabolas_1 = np.zeros([fluxpoints, powerpoints, len(freqaxis)]) # only with pump freq
@@ -159,6 +167,7 @@ parabolas_2 = np.zeros([fluxpoints, powerpoints, len(freqaxis)]) # only at first
 parabolas_3 = np.zeros([fluxpoints, powerpoints, len(freqaxis)]) # only at second ..
 effective_drive = np.zeros([fluxpoints, powerpoints, len(freqaxis)])
 
+# Required: cut all drives above the gap and below the pump frequency
 
 
 for kk, dc_offset in enumerate(dc_offsets):
