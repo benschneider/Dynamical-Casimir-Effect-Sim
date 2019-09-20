@@ -80,13 +80,13 @@ fit_data.get_fitvals()
 # Uncomment this code for creation of 2D maps
 dc_flux = np.linspace(-0.65, -0.35, 301)
 ac_flux = np.linspace(0, 0.2, 201)
-harmonics = 20  # only use first 20 harmonics
+armonics = 20  # only use first 20 harmonics
 wd = 8.9e9
 timeaxis = np.linspace(0, 6e-9, 20001)  # for FFT
 w = 4.8e9  # detector frequency
 ws = np.linspace(0.01e9, 15.01e9, 151)
 pfreq = [40e9] # for single plasmafrequency map
-pfreqs = np.linspace(1, 31, 121)*1e9  # plasmafrequencies
+freqs = np.linspace(1, 31, 121)*1e9  # plasmafrequencies
 output_file1 = 'output/mtx/hoa_matrix_wide_20.mtx'
 output_file2 = 'output/mtx/dce_p_20.mtx'
 output_file3 = 'output/mtx/dce_w_20.mtx'
