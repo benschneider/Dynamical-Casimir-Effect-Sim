@@ -35,12 +35,12 @@ def LJDC(fluxdc, Ic=3.4e-6):
     Ej_dc = Ic*flux0/(2*np.pi)
     return (flux0/(2*pi))**2 *1/(Ej_dc*np.abs(cos(pi*fluxdc))) # normalized fluxdc
 
-def get_beta(D, w, wd=8.9e9, wp=40e9, fluxdc=0.475, Ic=3.4e-6, F0=np.pi, dfdc=0):  #, Ic=3.4e-6):
+def get_beta(D, w, wd=8.9e9, wp=40e9, fluxdc=0.475, Ic=3.4e-6, F0=1.0, dfdc=0):  #, Ic=3.4e-6):
     # F0 is the conversion factor from hoa phase to an effective F0*D=fluxac
     flux0 = cons.h/(2*cons.e)
     Ldc = LJDC(fluxdc, Ic)  # SQUID inductance
     Z0 = 50
-    part1 = F0*D*2j*pi*D # fluxpump strength
+    part1 = 1j*pi*F0*D # fluxpump strength
     part2 = np.sqrt(w*(wd-w))*Ldc/Z0 #/(wd*Z0)
     part3 = 1-(w**2)/(wp**2)+1j*Ldc*w/Z0  # SQUID reflection eqn r(w)(negative w)
     part4 = 1-(wd-w)**2/(wp**2)-1j*Ldc*(wd-w)/Z0  # SQUID reflection eqn r(w)(positive w)
@@ -78,25 +78,27 @@ def get_response_vs_w(ws, wd, pfreq, dc_flux, ac_flux, harmonics):
 fit_data.get_fitvals()
 
 # Uncomment this code for creation of 2D maps
-dc_flux = np.linspace(-0.65, -0.35, 301)
-ac_flux = np.linspace(0, 0.2, 201)
-armonics = 20  # only use first 20 harmonics
-wd = 8.9e9
+# dc_flux = np.linspace(-0.65, 0.65, 261)  #
+#ac_flux = np.linspace(0, 0.5, 201)
 timeaxis = np.linspace(0, 6e-9, 20001)  # for FFT
+dc_flux = np.linspace(-0.65, -0.35, 301)
+ac_flux = np.linspace(0, 0.1, 201)
+harmonics = 30  # only use first 20 harmonics
+wd = 8.9e9  # input pump frequency
 w = 4.8e9  # detector frequency
 ws = np.linspace(0.01e9, 15.01e9, 151)
 pfreq = [40e9] # for single plasmafrequency map
-freqs = np.linspace(1, 31, 121)*1e9  # plasmafrequencies
-output_file1 = 'output/mtx/hoa_matrix_wide_20.mtx'
-output_file2 = 'output/mtx/dce_p_20.mtx'
-output_file3 = 'output/mtx/dce_w_20.mtx'
+pfreqs = np.linspace(1, 41, 121)*1e9  # plasmafrequencies
+output_file1 = 'output/mtx/hoa_matrix_wide_30.mtx'
+output_file2 = 'output/mtx/dce_p_30.mtx'
+output_file3 = 'output/mtx/dce_w_30.mtx'
 
-# # uncomment this to create a higher harmonics map
-# hoa_matrix = hoa.make_response(ac_flux, dc_flux, wd, timeaxis, fit_data, harmonics=harmonics, plot=False)
-# h = ('Units,ufo,Harmonics,' + str(0) + ',' + str(harmonics) +
-#      ',Pump,' + str(ac_flux[0]) + ',' + str(ac_flux[-1]) +
-#      ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
-# savemtx(output_file1, hoa_matrix, h)
+## uncomment this to create a higher harmonics map
+#hoa_matrix = hoa.make_response(ac_flux, dc_flux, wd, timeaxis, fit_data, harmonics=harmonics, plot=False)
+#h = ('Units,ufo,Harmonics,' + str(0) + ',' + str(harmonics) +
+#     ',Pump,' + str(ac_flux[0]) + ',' + str(ac_flux[-1]) +
+#     ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
+#savemtx(output_file1, hoa_matrix, h)
 
 # loading and using a generated higher harmonics map vs plasma frequency
 hoa_matrix, h = loadmtx(output_file1)
@@ -117,4 +119,5 @@ header3 = ('Units,Photon,Det. Freq,' + str(ws[0]) + ',' + str(ws[-1]) +
           ',Pump,' + str(ac_flux[0]) + ',' + str(ac_flux[-1]) +
           ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
 savemtx(output_file3, DCE_map_ws, header3)
+
 
