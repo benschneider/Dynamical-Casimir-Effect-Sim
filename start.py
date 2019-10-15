@@ -75,6 +75,22 @@ def get_response_vs_w(ws, wd, pfreq, dc_flux, ac_flux, harmonics):
                 phot_map[i,:,k] += beta
     return np.abs(phot_map)**2
 
+
+def get_response_vs_har(w, wd, pfreq, dc_flux, ac_flux, harmonics):
+    phot_map = 1j*np.zeros([len(dc_flux),len(ac_flux),harmonics])
+    hoa_str = np.zeros(len(ac_flux))
+    wp = pfreq[0]
+    for i, fluxdc in enumerate(dc_flux):
+        print(i)
+        beta_sum = 0
+        for h in range(harmonics):
+            wd_eff = wd + wd*h
+            hoa_str = hoa_matrix[i, :, h]  # get vector
+            beta = get_beta(hoa_str, w, wd_eff, wp, fluxdc)
+            beta_sum += beta
+            phot_map[i,:,h] += beta_sum
+    return np.abs(phot_map)**2
+
 fit_data.get_fitvals()
 
 # Uncomment this code for creation of 2D maps
@@ -92,13 +108,14 @@ pfreqs = np.linspace(1, 41, 121)*1e9  # plasmafrequencies
 output_file1 = 'output/mtx/hoa_matrix_wide_30.mtx'
 output_file2 = 'output/mtx/dce_p_30.mtx'
 output_file3 = 'output/mtx/dce_w_30.mtx'
+output_file4 = 'output/mtx/dce_harm.mtx'
 
-## uncomment this to create a higher harmonics map
-#hoa_matrix = hoa.make_response(ac_flux, dc_flux, wd, timeaxis, fit_data, harmonics=harmonics, plot=False)
-#h = ('Units,ufo,Harmonics,' + str(0) + ',' + str(harmonics) +
-#     ',Pump,' + str(ac_flux[0]) + ',' + str(ac_flux[-1]) +
-#     ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
-#savemtx(output_file1, hoa_matrix, h)
+# uncomment this to create a higher harmonics map
+hoa_matrix = hoa.make_response(ac_flux, dc_flux, wd, timeaxis, fit_data, harmonics=harmonics, plot=False)
+h = ('Units,ufo,Harmonics,' + str(0) + ',' + str(harmonics) +
+     ',Pump,' + str(ac_flux[0]) + ',' + str(ac_flux[-1]) +
+     ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
+savemtx(output_file1, hoa_matrix, h)
 
 # loading and using a generated higher harmonics map vs plasma frequency
 hoa_matrix, h = loadmtx(output_file1)
@@ -110,7 +127,6 @@ header2 = ('Units,Photon,Plasma Freq,' + str(pfreqs[0]) + ',' + str(pfreqs[-1]) 
           ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
 savemtx(output_file2, DCE_map, header2)
 
-
 # loading and using a generated higher harmonics map vs detector frequency
 print('calculating ws map')
 hoa_matrix, h = loadmtx(output_file1)
@@ -120,4 +136,12 @@ header3 = ('Units,Photon,Det. Freq,' + str(ws[0]) + ',' + str(ws[-1]) +
           ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
 savemtx(output_file3, DCE_map_ws, header3)
 
+# loading and using a generated higher harmonics map vs harmonics
+print('calculating ws map')
+hoa_matrix, h = loadmtx(output_file1)
+DCE_map_har = get_response_vs_har(w, wd, pfreq, dc_flux, ac_flux, harmonics)
+header4 = ('Units,Photon,harmonics,' + str(0) + ',' + str(harmonics) +
+          ',Pump,' + str(ac_flux[0]) + ',' + str(ac_flux[-1]) +
+          ',FluxPos,' + str(dc_flux[0]) + ','+str(dc_flux[-1])+'')
+savemtx(output_file4, DCE_map_har, header4)
 
