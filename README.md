@@ -9,6 +9,8 @@
 ![Hamiltonian of the System](https://user-images.githubusercontent.com/4573907/40114212-544f9f36-590c-11e8-9134-163e7d6c2706.png)
 (J. R. Johansson et al.: Phys. Rev. A 82, 052509 (2010))
 
+![System](https://user-images.githubusercontent.com/4573907/68273709-7ef77700-0067-11ea-8cc6-8fa4d2bf58da.png)
+
 ## What this script does:
 
 - 1. Takes the SQUIDs non-linear phase response as a function of magnetic flux.
