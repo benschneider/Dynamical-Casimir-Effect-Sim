@@ -56,11 +56,11 @@ def get_a(x, fx, nn=50):
         a.append(b[int(len(x)/2)])
     return a
 
-def nout(a, f=4.1e9, nmax=3, jmax=3, fd=8.9e9):
-    vmc = get_part3(a, nmax, jmax)
+def nout(a, ac=0.02, f=4.1e9, nmax=3, jmax=3, fd=8.9e9):
+    vmc = get_part3(a, ac, nmax, jmax)
     return vmc**2*(fd-f)/(4*f)
 
-def get_part3(jj, n):
+def get_part1(jj, n):
     ''' works as expected for n=>1'''
     result = 1
     for k in range(1, jj+1):
@@ -72,19 +72,19 @@ def get_part3(jj, n):
 def get_part2(a, ac, jmax=2, n=1):
     tb = 0
     for jj in range(jmax+1):
-        p2 = a[2*jj+n] * ac**(2*jj+n)
+        p2 = a[2*jj+n-1] * ac**(2*jj+n)
         print(str(jj))
-        print('\t p2: ' +str(p2))
-        p3  = get_part3(jj, n)
-        print('\t p2*p3: ' +str(p2*p3))
+        print('\t eq: ' +str(a[2*jj+n-1])+'*AC^'+str(2*jj+n))
+        p3  = get_part1(jj, n)
+        print('\t p3: ' +str(p3))
         tb += p2 * p3
     return tb
 
-def get_part1(a, nmax, jmax):
+def get_part3(a, ac, nmax, jmax):
     vmc = 0
     for n in range(1, nmax+1):
         p = 2**(n-1)*factorial(n-1)
-        vmc += 1/p*get_part2(a, n, jmax)
+        vmc += 1/p*get_part2(a, ac, jmax, n)
     return -vmc
 
 # file_phase = '1169S11_p_4p1.dat'
